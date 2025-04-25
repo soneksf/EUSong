@@ -1,0 +1,49 @@
+﻿@{
+    ViewData["Title"] = "Welcome";
+    var username = ViewBag.Username as string;
+    var role = ViewBag.Role as string;
+}
+
+<div class="text-center">
+    @if (!string.IsNullOrEmpty(username) && role == "User")
+    {
+        <h1 class="display-4">Welcome back, @username!</h1>
+        <p class="lead">Glad to see you again. Ready to vote?</p>
+    }
+    else
+    {
+        <h1 class="display-4">Welcome to Eurovision Song Voting</h1>
+        <p class="lead">Support your favorite songs, vote and comment!</p>
+    }
+
+    <!-- решта карток Browse / Results / Profile -->
+    <div class="row mt-5">
+        <!-- Browse -->
+        <div class="col-md-4 mb-3">
+            <div class="card p-3">
+                <h5>Browse Songs</h5>
+                <p>Find your favorite Eurovision entries.</p>
+                <a class="btn btn-primary" asp-controller="Song" asp-action="Index">Browse</a>
+            </div>
+        </div>
+        <!-- Results -->
+        <div class="col-md-4 mb-3">
+            <div class="card p-3">
+                <h5>See Results</h5>
+                <p>Check the current top songs by votes!</p>
+                <a class="btn btn-success" asp-controller="Song" asp-action="Results">Results</a>
+            </div>
+        </div>
+        <!-- Profile (тільки для User) -->
+        @if (role == "User")
+        {
+            <div class="col-md-4 mb-3">
+                <div class="card p-3">
+                    <h5>Your Profile</h5>
+                    <p>See your votes and comments.</p>
+                    <a class="btn btn-info" asp-controller="Profile" asp-action="Index">Profile</a>
+                </div>
+            </div>
+        }
+    </div>
+</div>

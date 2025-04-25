@@ -1,0 +1,12 @@
+﻿@model IEnumerable<EUSong.Models.Song>
+
+<h2>Vote for a Song</h2>
+
+@foreach (var song in Model)
+{
+    <div>
+        <h3>@song.Title (@song.Country)</h3>
+        <p>@song.Singer</p>
+        <a asp-action="Create" asp-route-id="@song.Id">Vote</a>
+    </div>
+}

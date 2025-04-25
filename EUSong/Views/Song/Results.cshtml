@@ -1,0 +1,90 @@
+﻿@{
+    ViewData["Title"] = "Voting Results";
+}
+
+<h2>Voting Results</h2>
+
+<form method="get" asp-action="Results" class="row g-2 mb-4">
+    <div class="col-md-2">
+        <select name="top" class="form-select">
+            <select name="top" class="form-select">
+                @if (ViewBag.Top == 3)
+                {
+                    <option value="3" selected>Top 3</option>
+                }
+                else
+                {
+                    <option value="3">Top 3</option>
+                }
+
+                @if (ViewBag.Top == 5)
+                {
+                    <option value="5" selected>Top 5</option>
+                }
+                else
+                {
+                    <option value="5">Top 5</option>
+                }
+
+                @if (ViewBag.Top == 10)
+                {
+                    <option value="10" selected>Top 10</option>
+                }
+                else
+                {
+                    <option value="10">Top 10</option>
+                }
+
+                @if (ViewBag.Top == 20)
+                {
+                    <option value="20" selected>Top 20</option>
+                }
+                else
+                {
+                    <option value="20">Top 20</option>
+                }
+            </select>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <input type="number" name="year" value="@ViewBag.Year" class="form-control" placeholder="Year (optional)" />
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Show</button>
+    </div>
+</form>
+
+@if (!Model.Any())
+{
+    <p>No results found.</p>
+}
+else
+{
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Title</th>
+                <th>Singer</th>
+                <th>Country</th>
+                <th>Total Points</th>
+            </tr>
+        </thead>
+        <tbody>
+        @{
+            int rank = 1;
+            foreach (var item in Model)
+            {
+                <tr>
+                    <td>@rank</td>
+                    <td>@item.Song.Title</td>
+                    <td>@item.Song.Singer</td>
+                    <td>@item.Song.Country</td>
+                    <td>@item.TotalPoints</td>
+                </tr>
+                rank++;
+            }
+        }
+        </tbody>
+    </table>
+}

@@ -1,0 +1,16 @@
+﻿<h2>Votes by Year</h2>
+
+<table class="table">
+    <thead>
+        <tr><th>Year</th><th>Total Votes</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var item in ViewBag.GroupedVotes)
+        {
+            <tr>
+                <td>@item.Year</td>
+                <td>@item.Votes</td>
+            </tr>
+        }
+    </tbody>
+</table>

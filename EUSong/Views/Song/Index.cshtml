@@ -1,0 +1,59 @@
+﻿@model IEnumerable<EUSong.Models.Song>
+@{
+    ViewData["Title"] = "Browse Songs";
+}
+
+<h2>Browse Eurovision Songs</h2>
+
+<form method="get" asp-action="Index" class="row g-2 mb-4">
+    <div class="col-md-3">
+        <input type="text" name="keyword" value="@ViewBag.Keyword" class="form-control" placeholder="Search by keyword" />
+    </div>
+    <div class="col-md-3">
+        <input type="text" name="country" value="@ViewBag.Country" class="form-control" placeholder="Country" />
+    </div>
+    <div class="col-md-3">
+        <input type="text" name="singer" value="@ViewBag.Singer" class="form-control" placeholder="Singer" />
+    </div>
+    <div class="col-md-2">
+        <input type="number" name="year" value="@ViewBag.Year" class="form-control" placeholder="Year" />
+    </div>
+    <div class="col-md-1">
+        <button type="submit" class="btn btn-primary w-100">Filter</button>
+    </div>
+</form>
+
+@if (!Model.Any())
+{
+    <p>No songs found.</p>
+}
+else
+{
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Singer</th>
+                <th>Country</th>
+                <th>Year</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var song in Model)
+            {
+                <tr>
+                    <td>@song.Title</td>
+                    <td>@song.Singer</td>
+                    <td>@song.Country</td>
+                    <td>@song.Year</td>
+                </tr>
+            <td>
+                <a asp-controller="Vote" asp-action="Create" asp-route-songId="@song.Id" class="btn btn-sm btn-warning">Vote</a>
+                <a asp-controller="Comment" asp-action="Index" asp-route-songId="@song.Id" class="btn btn-sm btn-outline-primary">View Comments</a>
+                <a asp-controller="Comment" asp-action="Create" asp-route-songId="@song.Id" class="btn btn-sm btn-outline-success">Comment</a>
+            </td>
+
+            }
+        </tbody>
+    </table>
+}

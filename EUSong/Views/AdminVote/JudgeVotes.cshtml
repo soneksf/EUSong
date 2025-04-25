@@ -1,0 +1,31 @@
+﻿@model IEnumerable<EUSong.Models.Vote>
+
+@{
+    ViewData["Title"] = "Judge Votes";
+}
+
+<h2>Judge Votes</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Song</th>
+            <th>Judge (User)</th>
+            <th>Value</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var vote in Model)
+        {
+            <tr>
+                <td>@vote.Song.Title</td>
+                <td>@vote.User.Username</td>
+                <td>@vote.Value</td>
+                <td>
+                    <a asp-action="Delete" asp-route-id="@vote.Id" class="btn btn-danger btn-sm">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

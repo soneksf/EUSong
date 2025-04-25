@@ -1,0 +1,24 @@
+﻿@model IEnumerable<EUSong.Models.Song>
+
+<h2>Votes</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Singer</th>
+            <th>Country</th>
+            <th>Total Votes</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var song in Model)
+        {
+            <tr>
+                <td>@song.Title</td>
+                <td>@song.Singer</td>
+                <td>@song.Country</td>
+                <td>@song.Votes.Sum(v => v.Value)</td>
+            </tr>
+        }
+    </tbody>
+</table>

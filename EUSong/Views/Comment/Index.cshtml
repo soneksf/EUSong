@@ -1,0 +1,36 @@
+﻿@model IEnumerable<EUSong.Models.Comment>
+@{
+    ViewData["Title"] = "Comments";
+    var song = ViewBag.Song as EUSong.Models.Song;
+}
+
+<h2>Comments for "@song.Title"</h2>
+
+@if (!Model.Any())
+{
+    <p>No comments yet.</p>
+}
+else
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Text</th>
+                <th>Rating</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var comment in Model)
+            {
+                <tr>
+                    <td>@comment.User.Username</td>
+                    <td>@comment.Text</td>
+                    <td>@comment.Rating / 5</td>
+                    <td>@comment.Timestamp.ToString("g")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

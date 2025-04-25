@@ -1,0 +1,59 @@
+﻿@{
+    ViewData["Title"] = "Your Profile";
+}
+
+<h2>Your Votes</h2>
+
+@if (!ViewBag.Votes.Any())
+{
+    <p>You haven't voted yet.</p>
+}
+else
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Song</th>
+                <th>Vote Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var vote in ViewBag.Votes)
+            {
+                <tr>
+                    <td>@vote.Song.Title (@vote.Song.Country)</td>
+                    <td>@vote.Value</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<h2 class="mt-5">Your Comments</h2>
+
+@if (!ViewBag.Comments.Any())
+{
+    <p>You haven't commented yet.</p>
+}
+else
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Song</th>
+                <th>Comment</th>
+                <th>Rating</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var comment in ViewBag.Comments)
+            {
+                <tr>
+                    <td>@comment.Song.Title</td>
+                    <td>@comment.Text</td>
+                    <td>@comment.Rating / 5</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

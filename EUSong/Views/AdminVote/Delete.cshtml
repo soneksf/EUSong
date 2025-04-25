@@ -1,0 +1,22 @@
+﻿@model EUSong.Models.Vote
+
+@{
+    ViewData["Title"] = "Delete Vote";
+}
+
+<h2>Delete Vote</h2>
+
+<h3>Are you sure you want to delete this vote?</h3>
+
+<div>
+    <p><strong>Song:</strong> @Model.Song.Title</p>
+    <p><strong>User:</strong> @Model.User.Username</p>
+    <p><strong>Type:</strong> @Model.Type</p>
+    <p><strong>Value:</strong> @Model.Value</p>
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a asp-action="JudgeVotes" class="btn btn-secondary">Cancel</a>
+</form>

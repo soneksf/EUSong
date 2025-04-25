@@ -1,0 +1,18 @@
+﻿<h2>Judge vs Listener Votes</h2>
+
+<table class="table">
+    <thead>
+        <tr><th>Song</th><th>Country</th><th>Judge</th><th>Listener</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var row in ViewBag.Comparison)
+        {
+            <tr>
+                <td>@row.Song.Title</td>
+                <td>@row.Song.Country</td>
+                <td>@row.JudgeVotes</td>
+                <td>@row.ListenerVotes</td>
+            </tr>
+        }
+    </tbody>
+</table>

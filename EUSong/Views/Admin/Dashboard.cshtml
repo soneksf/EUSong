@@ -1,0 +1,65 @@
+﻿@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<h2>Admin Dashboard</h2>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card p-3 mb-3">
+            <h5>Total Songs</h5>
+            <p>@ViewBag.TotalSongs</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 mb-3">
+            <h5>Total Users</h5>
+            <p>@ViewBag.TotalUsers</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 mb-3">
+            <h5>Total Votes</h5>
+            <p>@ViewBag.TotalVotes</p>
+            <small>Judge: @ViewBag.JudgeVotes | Listener: @ViewBag.ListenerVotes</small>
+        </div>
+    </div>
+</div>
+
+<h3 class="mt-4">Songs by Year</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Year</th>
+            <th>Number of Songs</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in ViewBag.SongsByYear)
+        {
+            <tr>
+                <td>@item.Year</td>
+                <td>@item.Count</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h3 class="mt-4">Top 5 Songs by Average Vote</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Song</th>
+            <th>Average Vote</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var song in ViewBag.SongAverageVotes)
+        {
+            <tr>
+                <td>@song.Title</td>
+                <td>@String.Format("{0:F2}", song.AverageVote)</td>
+            </tr>
+        }
+    </tbody>
+</table>

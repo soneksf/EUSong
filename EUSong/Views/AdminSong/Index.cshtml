@@ -1,0 +1,47 @@
+﻿@model IEnumerable<EUSong.Models.Song>
+
+@{
+    ViewData["Title"] = "Manage Songs";
+}
+
+<h2>Manage Songs</h2>
+
+<form method="get" asp-action="Index" class="row mb-4">
+    <div class="col-md-4">
+        <input type="text" name="country" value="@ViewBag.SelectedCountry" class="form-control" placeholder="Search by Country" />
+    </div>
+    <div class="col-md-3">
+        <input type="number" name="year" value="@ViewBag.SelectedYear" class="form-control" placeholder="Search by Year" />
+    </div>
+    <div class="col-md-3">
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a asp-action="Index" class="btn btn-secondary">Reset</a>
+    </div>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Singer</th>
+            <th>Country</th>
+            <th>Year</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var song in Model)
+        {
+            <tr>
+                <td>@song.Title</td>
+                <td>@song.Singer</td>
+                <td>@song.Country</td>
+                <td>@song.Year</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@song.Id" class="btn btn-sm btn-warning">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@song.Id" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
