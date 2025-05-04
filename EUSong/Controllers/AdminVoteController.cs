@@ -1,28 +1,25 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// Controllers/AdminVoteController.cs
+using System.Linq;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EUSong.Data;
 using EUSong.Models;
-using System.Linq;
 
 namespace EUSong.Controllers
 {
     public class AdminVoteController : Controller
     {
         private readonly AppDbContext _context;
+        public AdminVoteController(AppDbContext context) => _context = context;
 
-        public AdminVoteController(AppDbContext context)
-        {
-            _context = context;
-        }
+        private bool IsAdminOrAbove()
+            => new[] { "Admin", "SuperAdmin" }
+                .Contains(HttpContext.Session.GetString("UserRole"));
 
-        private bool IsAdmin()
-        {
-            return HttpContext.Session.GetString("UserRole") == "Admin";
-        }
-
+        // Show all judge votes
         public IActionResult JudgeVotes()
         {
-            if (!IsAdmin()) return Unauthorized();
+            if (!IsAdminOrAbove()) return Unauthorized();
 
             var votes = _context.Votes
                 .Include(v => v.Song)
@@ -33,44 +30,49 @@ namespace EUSong.Controllers
             return View(votes);
         }
 
-        public IActionResult ListenerVotes()
+        // GET: AdminVote/Create?songId=123
+        [HttpGet]
+        public IActionResult Create(int songId)
         {
-            if (!IsAdmin()) return Unauthorized();
+            if (!IsAdminOrAbove()) return Unauthorized();
 
-            var votes = _context.Votes
-                .Include(v => v.Song)
-                .Include(v => v.User)
-                .Where(v => v.Type == "listener")
-                .ToList();
+            var song = _context.Songs.Find(songId);
+            if (song == null) return NotFound();
 
-            return View(votes);
+            ViewBag.SongTitle = song.Title;
+            return View(new AddVoteViewModel { SongId = songId });
         }
 
-        public IActionResult Delete(int id)
+        // POST: AdminVote/Create
+        [HttpPost, ValidateAntiForgeryToken]
+        public IActionResult Create(AddVoteViewModel vm)
         {
-            if (!IsAdmin()) return Unauthorized();
+            if (!IsAdminOrAbove()) return Unauthorized();
 
-            var vote = _context.Votes
-                .Include(v => v.Song)
-                .Include(v => v.User)
-                .FirstOrDefault(v => v.Id == id);
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
 
-            if (vote == null) return NotFound();
+            if (!ModelState.IsValid)
+            {
+                var song = _context.Songs.Find(vm.SongId);
+                ViewBag.SongTitle = song?.Title ?? "—";
+                return View(vm);
+            }
 
-            return View(vote);
-        }
+            var vote = new Vote
+            {
+                SongId = vm.SongId,
+                Value = vm.Value,
+                UserId = userId.Value,
+                Timestamp = DateTime.UtcNow,
+                Type = "judge"
+            };
 
-        [HttpPost, ActionName("Delete")]
-        public IActionResult DeleteConfirmed(int id)
-        {
-            if (!IsAdmin()) return Unauthorized();
-
-            var vote = _context.Votes.Find(id);
-            if (vote == null) return NotFound();
-
-            _context.Votes.Remove(vote);
+            _context.Votes.Add(vote);
             _context.SaveChanges();
-            return RedirectToAction(nameof(JudgeVotes)); // Після видалення повертаємось на суддівські голоси
+
+            return RedirectToAction(nameof(JudgeVotes));
         }
     }
 }

@@ -1,59 +1,137 @@
 ﻿@model IEnumerable<EUSong.Models.Song>
 @{
     ViewData["Title"] = "Browse Songs";
+
+    // authentication & card flags
+    var isAuth = (bool)(ViewBag.IsAuthenticated ?? false);
+    var hasCard = (bool)(ViewBag.HasCard ?? false);
+
+    // get the current role from session
+    var role = Context.Session.GetString("UserRole") ?? "";
 }
 
-<h2>Browse Eurovision Songs</h2>
+<div class="hero">
+    <div class="container">
+        <h2 class="browse-header">Browse Eurovision Songs</h2>
+    </div>
+</div>
 
-<form method="get" asp-action="Index" class="row g-2 mb-4">
-    <div class="col-md-3">
-        <input type="text" name="keyword" value="@ViewBag.Keyword" class="form-control" placeholder="Search by keyword" />
-    </div>
-    <div class="col-md-3">
-        <input type="text" name="country" value="@ViewBag.Country" class="form-control" placeholder="Country" />
-    </div>
-    <div class="col-md-3">
-        <input type="text" name="singer" value="@ViewBag.Singer" class="form-control" placeholder="Singer" />
-    </div>
-    <div class="col-md-2">
-        <input type="number" name="year" value="@ViewBag.Year" class="form-control" placeholder="Year" />
-    </div>
-    <div class="col-md-1">
-        <button type="submit" class="btn btn-primary w-100">Filter</button>
-    </div>
-</form>
+<div class="container mt-4">
+    <div class="browse-container">
 
-@if (!Model.Any())
-{
-    <p>No songs found.</p>
-}
-else
-{
-    <table class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Singer</th>
-                <th>Country</th>
-                <th>Year</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var song in Model)
-            {
-                <tr>
-                    <td>@song.Title</td>
-                    <td>@song.Singer</td>
-                    <td>@song.Country</td>
-                    <td>@song.Year</td>
-                </tr>
-            <td>
-                <a asp-controller="Vote" asp-action="Create" asp-route-songId="@song.Id" class="btn btn-sm btn-warning">Vote</a>
-                <a asp-controller="Comment" asp-action="Index" asp-route-songId="@song.Id" class="btn btn-sm btn-outline-primary">View Comments</a>
-                <a asp-controller="Comment" asp-action="Create" asp-route-songId="@song.Id" class="btn btn-sm btn-outline-success">Comment</a>
-            </td>
+        <!-- Filter form -->
+        <form method="get" asp-action="Index" class="row g-3 mb-4">
+            <div class="col-md-4">
+                <input type="text" name="keyword" value="@ViewBag.Keyword"
+                       class="form-control"
+                       placeholder="Search by keyword" />
+            </div>
+            <div class="col-md-3">
+                <input type="text" name="country" value="@ViewBag.Country"
+                       class="form-control"
+                       placeholder="Country" />
+            </div>
+            <div class="col-md-3">
+                <input type="text" name="singer" value="@ViewBag.Singer"
+                       class="form-control"
+                       placeholder="Singer" />
+            </div>
+            <div class="col-md-1">
+                <input type="number" name="year" value="@ViewBag.Year"
+                       class="form-control"
+                       placeholder="Year" />
+            </div>
+            <div class="col-md-1 d-grid">
+                <button type="submit" class="btn btn-primary btn-filter">Filter</button>
+            </div>
+        </form>
 
-            }
-        </tbody>
-    </table>
-}
+        @* No songs found *@
+        @if (!Model.Any())
+        {
+            <p class="text-center text-muted">No songs found.</p>
+        }
+        else
+        {
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Singer</th>
+                        <th>Country</th>
+                        <th>Year</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var song in Model)
+                    {
+                        <tr>
+                            <td>@song.Title</td>
+                            <td>@song.Singer</td>
+                            <td>@song.Country</td>
+                            <td>@song.Year</td>
+                            <td class="d-flex flex-wrap gap-2">
+                                @* Only 2025 votes *@
+                                @if (song.Year != 2025)
+                                {
+                                    <button class="btn btn-secondary btn-sm" disabled>
+                                        Voting only for 2025
+                                    </button>
+                                }
+                                else if (!isAuth)
+                                {
+                                    @* Not logged in *@
+                                    <a class="btn btn-outline-primary btn-sm"
+                                       asp-controller="Account" asp-action="Login">
+                                        Login to Vote
+                                    </a>
+                                }
+                                else if (role != "User")
+                                {
+                                    @* Admins/SuperAdmins get no voting UI *@
+                                    <button class="btn btn-secondary btn-sm" disabled>
+                                        Not eligible to vote
+                                    </button>
+                                }
+                                else if (!hasCard)
+                                {
+                                    @* Logged-in user without card *@
+                                    <a class="btn btn-outline-warning btn-sm"
+                                       asp-controller="CreditCard"
+                                       asp-action="Add"
+                                       asp-route-returnToVote="@song.Id">
+                                        Add Card to Vote
+                                    </a>
+                                }
+                                else
+                                {
+                                    @* Finally: real User with card *@
+                                    <a class="btn btn-warning btn-sm"
+                                       asp-controller="Vote"
+                                       asp-action="Create"
+                                       asp-route-songId="@song.Id">
+                                        Vote
+                                    </a>
+                                }
+
+                                <a class="btn btn-info btn-sm"
+                                   asp-controller="Comment"
+                                   asp-action="Index"
+                                   asp-route-songId="@song.Id">
+                                    View Comments
+                                </a>
+                                <a class="btn btn-success btn-sm"
+                                   asp-controller="Comment"
+                                   asp-action="Create"
+                                   asp-route-songId="@song.Id">
+                                    Comment
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

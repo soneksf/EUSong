@@ -1,12 +1,25 @@
 ﻿@model IEnumerable<EUSong.Models.Song>
+@{
+    var role = Context.Session.GetString("UserRole");
+}
 
 <h2>Vote for a Song</h2>
 
 @foreach (var song in Model)
 {
-    <div>
-        <h3>@song.Title (@song.Country)</h3>
-        <p>@song.Singer</p>
-        <a asp-action="Create" asp-route-id="@song.Id">Vote</a>
+    <div class="mb-3 d-flex align-items-center">
+        <div class="flex-grow-1">
+            <h4>@song.Title</h4>
+            <p>@song.Country — @song.Singer</p>
+        </div>
+
+        @* only show Vote button to real Users *@
+        @if (role == "User")
+        {
+            <form asp-action="Create" method="get" class="ms-3">
+                <input type="hidden" name="songId" value="@song.Id" />
+                <button type="submit" class="btn btn-primary">Vote</button>
+            </form>
+        }
     </div>
 }

@@ -1,49 +1,65 @@
 ﻿@{
-    ViewData["Title"] = "Welcome";
+    ViewData["Title"] = "Home";
     var username = ViewBag.Username as string;
     var role = ViewBag.Role as string;
 }
 
-<div class="text-center">
-    @if (!string.IsNullOrEmpty(username) && role == "User")
+<div class="hero">
+    @if (string.IsNullOrEmpty(username))
     {
-        <h1 class="display-4">Welcome back, @username!</h1>
-        <p class="lead">Glad to see you again. Ready to vote?</p>
+        <h1 class="display-4">Welcome to Eurovision Song App</h1>
+        <p class="lead">Please register or login to browse, vote and comment.</p>
+        <!-- Кнопка Browse пісень доступна навіть без логіну -->
+        <a class="btn btn-lg btn-outline-light me-3"
+           asp-controller="Song" asp-action="Index">Browse Songs</a>
+        <a class="btn btn-lg btn-outline-light me-3"
+           asp-controller="Account" asp-action="Register">Register</a>
+        <a class="btn btn-lg btn-outline-light"
+           asp-controller="Account" asp-action="Login">Login</a>
     }
     else
     {
-        <h1 class="display-4">Welcome to Eurovision Song Voting</h1>
-        <p class="lead">Support your favorite songs, vote and comment!</p>
-    }
-
-    <!-- решта карток Browse / Results / Profile -->
-    <div class="row mt-5">
-        <!-- Browse -->
-        <div class="col-md-4 mb-3">
-            <div class="card p-3">
-                <h5>Browse Songs</h5>
-                <p>Find your favorite Eurovision entries.</p>
-                <a class="btn btn-primary" asp-controller="Song" asp-action="Index">Browse</a>
-            </div>
-        </div>
-        <!-- Results -->
-        <div class="col-md-4 mb-3">
-            <div class="card p-3">
-                <h5>See Results</h5>
-                <p>Check the current top songs by votes!</p>
-                <a class="btn btn-success" asp-controller="Song" asp-action="Results">Results</a>
-            </div>
-        </div>
-        <!-- Profile (тільки для User) -->
         @if (role == "User")
         {
-            <div class="col-md-4 mb-3">
-                <div class="card p-3">
-                    <h5>Your Profile</h5>
-                    <p>See your votes and comments.</p>
-                    <a class="btn btn-info" asp-controller="Profile" asp-action="Index">Profile</a>
+            <h1 class="display-4">Welcome back, @username!</h1>
+            <p class="lead">Glad to see you again. Ready to vote?</p>
+        }
+        else
+        {
+            <h1 class="display-4">Welcome to Eurovision Admin Panel</h1>
+            <p class="lead">Manage your contest data here.</p>
+        }
+    }
+</div>
+
+@if (!string.IsNullOrEmpty(username))
+{
+    <div class="container">
+        <div class="row text-center justify-content-center g-4 mt-4">
+            <div class="col-md-4">
+                <div class="card feature-card p-4 h-100">
+                    <h5>Browse Songs</h5>
+                    <p>Find your favorite entries.</p>
+                    <a class="btn btn-primary" asp-controller="Song" asp-action="Index">Browse</a>
                 </div>
             </div>
-        }
+            <div class="col-md-4">
+                <div class="card feature-card p-4 h-100">
+                    <h5>See Results</h5>
+                    <p>Check top songs by votes.</p>
+                    <a class="btn btn-success" asp-controller="Song" asp-action="Results">Results</a>
+                </div>
+            </div>
+            @if (role == "User")
+            {
+                <div class="col-md-4">
+                    <div class="card feature-card p-4 h-100">
+                        <h5>Your Profile</h5>
+                        <p>See your votes and comments.</p>
+                        <a class="btn btn-info" asp-controller="Profile" asp-action="Index">Profile</a>
+                    </div>
+                </div>
+            }
+        </div>
     </div>
-</div>
+}

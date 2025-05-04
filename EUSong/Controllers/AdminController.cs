@@ -14,14 +14,20 @@ namespace EUSong.Controllers
             _context = context;
         }
 
-        private bool IsAdmin()
-        {
-            return HttpContext.Session.GetString("UserRole") == "Admin";
-        }
+        // Allow both Admin and SuperAdmin
+        private bool IsAdminOrAbove()
+            => new[] { "Admin", "SuperAdmin" }
+                .Contains(HttpContext.Session.GetString("UserRole"));
+
+        // Only SuperAdmin (if you need it for other actions)
+        private bool IsSuperAdmin()
+            => HttpContext.Session.GetString("UserRole") == "SuperAdmin";
 
         public IActionResult Dashboard()
         {
-            if (!IsAdmin()) return Unauthorized();
+            // Guard: Admin or SuperAdmin may view
+            if (!IsAdminOrAbove())
+                return Unauthorized();
 
             ViewBag.TotalSongs = _context.Songs.Count();
             ViewBag.TotalUsers = _context.Users.Count();
@@ -29,7 +35,6 @@ namespace EUSong.Controllers
             ViewBag.JudgeVotes = _context.Votes.Count(v => v.Type == "judge");
             ViewBag.ListenerVotes = _context.Votes.Count(v => v.Type == "listener");
 
-            // Нові дані
             ViewBag.SongsByYear = _context.Songs
                 .GroupBy(s => s.Year)
                 .Select(g => new { Year = g.Key, Count = g.Count() })
@@ -43,9 +48,19 @@ namespace EUSong.Controllers
                     AverageVote = s.Votes.Any() ? s.Votes.Average(v => v.Value) : 0
                 })
                 .OrderByDescending(x => x.AverageVote)
-                .Take(5) // Топ 5 пісень
+                .Take(5)
                 .ToList();
 
+            return View();
+        }
+
+        // Example of an action only SuperAdmin can perform:
+        public IActionResult Secrets()
+        {
+            if (!IsSuperAdmin())
+                return Unauthorized();
+
+            // ... super-secret stuff ...
             return View();
         }
     }

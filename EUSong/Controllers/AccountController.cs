@@ -1,73 +1,115 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using EUSong.Models;
-//using EurovisionSongApp.Data;
-using System.Linq;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using EUSong.Data;
 using EUSong.Models;
+using System;
+using System.Linq;
+using System.Security.Cryptography;
 
 namespace EUSong.Controllers
 {
     public class AccountController : Controller
     {
         private readonly AppDbContext _context;
+        public AccountController(AppDbContext context) => _context = context;
 
-        public AccountController(AppDbContext context)
-        {
-            _context = context;
-        }
+        [HttpGet]
+        public IActionResult Register() => View();
 
-        // GET: Register
-        public IActionResult Register()
-        {
-            return View();
-        }
-
-        // POST: Register
         [HttpPost]
-        public IActionResult Register(User user)
+        [ValidateAntiForgeryToken]
+        public IActionResult Register(RegisterViewModel vm)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid) return View(vm);
+
+            if (_context.Users.Any(u => u.Email == vm.Email))
             {
-                user.Role = "User"; // ➡ явно встановлюємо роль
-                _context.Users.Add(user);
-                _context.SaveChanges();
-                return RedirectToAction("Login");
+                ModelState.AddModelError(nameof(vm.Email), "Email is already taken");
+                return View(vm);
             }
-            return View(user);
+
+            // Генеруємо сіль і хеш
+            var salt = RandomNumberGenerator.GetBytes(16);
+            var saltB64 = Convert.ToBase64String(salt);
+            var hash = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                password: vm.Password!,
+                salt: salt,
+                prf: KeyDerivationPrf.HMACSHA256,
+                iterationCount: 100_000,
+                numBytesRequested: 32));
+
+            var user = new User
+            {
+                Username = vm.Username,
+                Email = vm.Email,
+                PasswordSalt = saltB64,
+                PasswordHash = hash,
+                Country = vm.Country,
+                IsAdmin = false
+            };
+
+            _context.Users.Add(user);
+            _context.SaveChanges();
+
+            HttpContext.Session.SetInt32("UserId", user.Id);
+            HttpContext.Session.SetString("Username", user.Username);
+            HttpContext.Session.SetString("UserRole", "User");
+
+            return RedirectToAction("Index", "Home");
         }
-
-
-        // GET: Login
+        // GET: /Account/Login
+        [HttpGet]
         public IActionResult Login()
         {
-            return View();
+            return View(new LoginViewModel());
         }
 
-        // POST: Login
+        // POST: /Account/Login
         [HttpPost]
-        public IActionResult Login(string email, string password)
+        [ValidateAntiForgeryToken]
+        public IActionResult Login(LoginViewModel vm)
         {
-            var user = _context.Users.FirstOrDefault(u => u.Email == email && u.Password == password);
-            if (user != null)
-            {
-                HttpContext.Session.SetInt32("UserId", user.Id);
-                HttpContext.Session.SetString("UserRole", user.Role);
-                HttpContext.Session.SetString("Username", user.Username); // ➡ додали це
+            if (!ModelState.IsValid)
+                return View(vm);
 
-                return RedirectToAction("Index", "Home");
+            // Ищем пользователя по email
+            var user = _context.Users.FirstOrDefault(u => u.Email == vm.Email);
+            if (user == null)
+            {
+                ModelState.AddModelError("", "Invalid credentials");
+                return View(vm);
             }
-            ViewBag.Error = "Invalid email or password";
-            return View();
+
+            // Восстанавливаем соль и хеш
+            var salt = Convert.FromBase64String(user.PasswordSalt);
+            var incomingHash = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                password: vm.Password,
+                salt: salt,
+                prf: KeyDerivationPrf.HMACSHA256,
+                iterationCount: 100_000,
+                numBytesRequested: 32));
+
+            if (incomingHash != user.PasswordHash)
+            {
+                ModelState.AddModelError("", "Invalid credentials");
+                return View(vm);
+            }
+
+            // Сохраняем сессию
+            HttpContext.Session.SetInt32("UserId", user.Id);
+            HttpContext.Session.SetString("Username", user.Username);
+            HttpContext.Session.SetString("UserRole", user.Role);
+
+            // Редирект на Home/Index
+            return RedirectToAction("Index", "Home");
         }
 
-
-
-        [HttpPost]
+        // POST: /Account/Logout
+        [HttpPost, ValidateAntiForgeryToken]
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();
             return RedirectToAction("Login");
         }
-
     }
 }

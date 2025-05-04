@@ -1,22 +1,40 @@
-﻿<h2>Add Credit Card</h2>
+﻿@model EUSong.Models.AddCreditCardViewModel
+@{
+    ViewData["Title"] = "Add Credit Card";
+}
 
-<form asp-action="Add" method="post">
-    <input type="hidden" name="returnToVote" value="@ViewBag.ReturnToVote" />
+<h2 class="browse-header">@ViewData["Title"]</h2>
 
-    <div class="form-group mb-3">
-        <label>Card Number</label>
-        <input name="cardNumber" class="form-control" required />
+<form asp-action="Add" method="post" class="row g-3">
+    @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+    <input asp-for="ReturnTo" type="hidden" />
+    <input asp-for="SongId" type="hidden" />
+
+    <div class="col-12">
+        <label asp-for="CardNumber" class="form-label text-white"></label>
+        <input asp-for="CardNumber" class="form-control" />
+        <span asp-validation-for="CardNumber" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="ExpiryDate" class="form-label text-white"></label>
+        <input asp-for="ExpiryDate" class="form-control" placeholder="MM/YY" />
+        <span asp-validation-for="ExpiryDate" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="CVV" class="form-label text-white"></label>
+        <input asp-for="CVV" class="form-control" />
+        <span asp-validation-for="CVV" class="text-danger"></span>
     </div>
 
-    <div class="form-group mb-3">
-        <label>Expiry Date</label>
-        <input name="expiryDate" class="form-control" placeholder="MM/YY" required />
+    <div class="col-12 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Save Card</button>
+        <a asp-controller="Song" asp-action="Index" class="btn btn-secondary">Back to Songs</a>
     </div>
-
-    <div class="form-group mb-3">
-        <label>CVV</label>
-        <input name="cvv" class="form-control" required />
-    </div>
-
-    <button type="submit" class="btn btn-primary">Save Card</button>
 </form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

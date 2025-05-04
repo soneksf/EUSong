@@ -1,54 +1,40 @@
-﻿@{
+﻿@model IEnumerable<dynamic>
+@{
     ViewData["Title"] = "Voting Results";
+    int top = ViewBag.Top ?? 10;
+    int? year = ViewBag.Year;
 }
 
-<h2>Voting Results</h2>
+<h2>@ViewData["Title"]</h2>
 
 <form method="get" asp-action="Results" class="row g-2 mb-4">
+    <!-- Top-N selector -->
     <div class="col-md-2">
         <select name="top" class="form-select">
-            <select name="top" class="form-select">
-                @if (ViewBag.Top == 3)
+            @foreach (var opt in new[] { 3, 5, 10, 20 })
+            {
+                if (opt == top)
                 {
-                    <option value="3" selected>Top 3</option>
+                    <option value="@opt" selected>Top @opt</option>
                 }
                 else
                 {
-                    <option value="3">Top 3</option>
+                    <option value="@opt">Top @opt</option>
                 }
-
-                @if (ViewBag.Top == 5)
-                {
-                    <option value="5" selected>Top 5</option>
-                }
-                else
-                {
-                    <option value="5">Top 5</option>
-                }
-
-                @if (ViewBag.Top == 10)
-                {
-                    <option value="10" selected>Top 10</option>
-                }
-                else
-                {
-                    <option value="10">Top 10</option>
-                }
-
-                @if (ViewBag.Top == 20)
-                {
-                    <option value="20" selected>Top 20</option>
-                }
-                else
-                {
-                    <option value="20">Top 20</option>
-                }
-            </select>
+            }
         </select>
     </div>
+
+    <!-- Year filter -->
     <div class="col-md-3">
-        <input type="number" name="year" value="@ViewBag.Year" class="form-control" placeholder="Year (optional)" />
+        <input type="number"
+               name="year"
+               value="@(year?.ToString() ?? "")"
+               class="form-control"
+               placeholder="Year (optional)" />
     </div>
+
+    <!-- Submit button -->
     <div class="col-md-2">
         <button type="submit" class="btn btn-primary w-100">Show</button>
     </div>
@@ -56,12 +42,12 @@
 
 @if (!Model.Any())
 {
-    <p>No results found.</p>
+    <p class="text-center text-muted">No results found.</p>
 }
 else
 {
     <table class="table table-bordered table-striped">
-        <thead>
+        <thead class="table-light">
             <tr>
                 <th>Rank</th>
                 <th>Title</th>
@@ -71,20 +57,22 @@ else
             </tr>
         </thead>
         <tbody>
-        @{
-            int rank = 1;
-            foreach (var item in Model)
-            {
-                <tr>
-                    <td>@rank</td>
-                    <td>@item.Song.Title</td>
-                    <td>@item.Song.Singer</td>
-                    <td>@item.Song.Country</td>
-                    <td>@item.TotalPoints</td>
-                </tr>
-                rank++;
+            @{
+                int rank = 1;
+                foreach (var item in Model)
+                {
+                    var song = (EUSong.Models.Song)item.Song;
+                    <tr>
+                        <td>@rank</td>
+                        <td>@song.Title</td>
+                        <td>@song.Singer</td>
+                        <td>@song.Country</td>
+                        <td>@item.TotalPoints</td>
+                    </tr>
+                    ;
+                    rank++;
+                }
             }
-        }
         </tbody>
     </table>
 }

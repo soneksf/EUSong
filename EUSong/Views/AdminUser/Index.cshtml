@@ -1,31 +1,40 @@
 ﻿@model IEnumerable<EUSong.Models.User>
-
 @{
     ViewData["Title"] = "Manage Users";
+    var currentId = ViewBag.CurrentUserId as int?;
 }
 
-<h2>Manage Users</h2>
+<h2>@ViewData["Title"]</h2>
 
 <table class="table">
     <thead>
         <tr>
             <th>Username</th>
             <th>Email</th>
-            <th>Country</th>
             <th>Role</th>
             <th>Actions</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var user in Model)
+        @foreach (var u in Model)
         {
             <tr>
-                <td>@user.Username</td>
-                <td>@user.Email</td>
-                <td>@user.Country</td>
-                <td>@user.Role</td>
+                <td>@u.Username</td>
+                <td>@u.Email</td>
+                <td>@u.Role</td>
                 <td>
-                    <a asp-action="Delete" asp-route-id="@user.Id" class="btn btn-danger btn-sm">Delete</a>
+                    @if (u.Id != currentId)
+                    {
+                        <a asp-action="Delete"
+                           asp-route-id="@u.Id"
+                           class="btn btn-danger btn-sm">
+                            Delete
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Cannot delete self</span>
+                    }
                 </td>
             </tr>
         }

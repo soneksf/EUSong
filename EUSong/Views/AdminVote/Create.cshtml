@@ -1,16 +1,17 @@
-﻿@* Views/Vote/Create.cshtml *@
-@model EUSong.Models.AddVoteViewModel
+﻿@model EUSong.Models.AddVoteViewModel
 @{
-    ViewData["Title"] = "Vote for “" + ViewBag.SongTitle + "”";
+    ViewData["Title"] = "Add Judge Vote";
+    // allowed Eurovision points (no 9 or 11)
     var allowed = new[] { 1, 2, 3, 4, 5, 6, 7, 8, 10, 12 };
 }
 
-<h2>@ViewData["Title"]</h2>
+<h2>@ViewData["Title"] for “@ViewBag.SongTitle”</h2>
 
 <form asp-action="Create" method="post" class="row g-3">
     @Html.AntiForgeryToken()
     <div asp-validation-summary="All" class="text-danger"></div>
 
+    @* carry the SongId *@
     <input asp-for="SongId" type="hidden" />
 
     <div class="col-md-4">
@@ -25,12 +26,11 @@
     </div>
 
     <div class="col-12">
-        <button type="submit" class="btn btn-primary">Submit Vote</button>
-        <a asp-controller="Song"
-           + asp-action="Index"
-           + class="btn btn-secondary">
-                      Cancel
-            
-        </a>
+        <button type="submit" class="btn btn-primary">Save Judge Vote</button>
+        <a asp-action="JudgeVotes" class="btn btn-secondary">Back to Judge Votes</a>
     </div>
 </form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,22 +1,58 @@
 ﻿@model EUSong.Models.Song
 
-<h2>Add Song</h2>
+@{
+    ViewData["Title"] = "Add New Song";
+}
 
-<form asp-action="Create" method="post">
-    <label>Title:</label>
-    <input asp-for="Title" /><br />
+<h2>@ViewData["Title"]</h2>
 
-    <label>Singer:</label>
-    <input asp-for="Singer" /><br />
+<div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-    <label>Year:</label>
-    <input asp-for="Year" /><br />
+<form asp-action="Create" method="post" class="row g-3">
+    <div class="col-12">
+        <label asp-for="Title" class="form-label">Title</label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
 
-    <label>Country:</label>
-    <input asp-for="Country" /><br />
+    <div class="col-12">
+        <label asp-for="Description" class="form-label">Description</label>
+        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
 
-    <label>Description:</label>
-    <textarea asp-for="Description"></textarea><br />
+    <div class="col-md-6">
+        <label asp-for="Singer" class="form-label">Singer</label>
+        <input asp-for="Singer" class="form-control" />
+        <span asp-validation-for="Singer" class="text-danger"></span>
+    </div>
 
-    <button type="submit">Save</button>
+    <div class="col-md-3">
+        <label asp-for="Year" class="form-label">Year</label>
+        <input asp-for="Year"
+               type="number"
+               class="form-control"
+               min="1900"
+               max="@DateTime.Now.Year" />
+        <span asp-validation-for="Year" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-3">
+        <label asp-for="Country" class="form-label">Country</label>
+        <select asp-for="Country"
+                class="form-select"
+                asp-items="ViewBag.Countries">
+            <option value="">-- Select country --</option>
+        </select>
+        <span asp-validation-for="Country" class="text-danger"></span>
+    </div>
+
+    <div class="col-12 d-flex gap-2">
+        <button type="submit" class="btn btn-success">Save</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </div>
 </form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

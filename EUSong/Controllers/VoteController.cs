@@ -1,81 +1,102 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// Controllers/VoteController.cs
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using EUSong.Models;
-using System.Linq;
 using EUSong.Data;
 using EUSong.Models;
+using System;
+using System.Linq;
 
 namespace EUSong.Controllers
 {
     public class VoteController : Controller
     {
         private readonly AppDbContext _context;
+        public VoteController(AppDbContext context) => _context = context;
 
-        public VoteController(AppDbContext context)
-        {
-            _context = context;
-        }
+        // Only real “User” role may vote
+        private bool IsRegularUser()
+            => HttpContext.Session.GetString("UserRole") == "User";
 
-        // Список пісень для голосування
+        // GET: /Vote
         public IActionResult Index()
         {
+            ViewBag.Message = TempData["VoteMessage"];
+            ViewBag.IsUser = IsRegularUser();
             var songs = _context.Songs.ToList();
             return View(songs);
         }
 
-        // GET: Vote/Create/5
-        public IActionResult Create(int id)
+        // GET: /Vote/Create?songId=123
+        [HttpGet]
+        public IActionResult Create(int songId)
         {
-            var song = _context.Songs.FirstOrDefault(s => s.Id == id);
-            if (song == null) return NotFound();
+            if (!IsRegularUser())
+            {
+                TempData["VoteMessage"] = "Only regular users may vote.";
+                return RedirectToAction("Index", "Song");
+            }
 
-            ViewBag.Song = song;
-            return View();
-        }
-
-        // POST: Vote/Create
-        [HttpPost]
-        public IActionResult Create(int songId, string type, int value)
-        {
             var userId = HttpContext.Session.GetInt32("UserId");
             if (userId == null)
-            {
                 return RedirectToAction("Login", "Account");
-            }
 
-            var user = _context.Users
-                        .Include(u => u.CreditCards)
-                        .FirstOrDefault(u => u.Id == userId);
+            bool hasVotedAny = _context.Votes.Any(v => v.UserId == userId.Value);
+            if (hasVotedAny)
+            {
+                TempData["VoteMessage"] = "You have already cast your vote.";
+                return RedirectToAction("Index", "Song");
+            }
 
             var song = _context.Songs.Find(songId);
+            if (song == null) return NotFound();
 
-            if (user.Country == song.Country)
+            ViewBag.SongTitle = song.Title;
+            return View(new AddVoteViewModel { SongId = songId });
+        }
+
+        // POST: /Vote/Create
+        [HttpPost, ValidateAntiForgeryToken]
+        public IActionResult Create(AddVoteViewModel vm)
+        {
+            if (!IsRegularUser())
             {
-                ViewBag.Error = "You cannot vote for your own country.";
-                ViewBag.Song = song;
-                return View();
+                TempData["VoteMessage"] = "Only regular users may vote.";
+                return RedirectToAction("Index", "Song");
             }
 
-            // ➡ Перевірка наявності кредитної картки
-            if (user.CreditCards == null || !user.CreditCards.Any())
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
+
+            bool hasVotedAny = _context.Votes.Any(v => v.UserId == userId.Value);
+            if (hasVotedAny)
             {
-                TempData["ErrorMessage"] = "You must add a credit card before voting.";
-                return RedirectToAction("AddCard", "Payment");
+                TempData["VoteMessage"] = "You have already cast your vote.";
+                return RedirectToAction("Index", "Song");
             }
 
-            var vote = new Vote
+            if (!ModelState.IsValid)
             {
-                SongId = songId,
-                UserId = user.Id,
-                Value = value,
-                Type = type
-            };
+                var song = _context.Songs.Find(vm.SongId);
+                ViewBag.SongTitle = song?.Title ?? "—";
+                return View(vm);
+            }
 
-            _context.Votes.Add(vote);
+            _context.Votes.Add(new Vote
+            {
+                SongId = vm.SongId,
+                Value = vm.Value,
+                UserId = userId.Value,
+                Timestamp = DateTime.UtcNow,
+                Type = "Listener"
+            });
             _context.SaveChanges();
 
-            return RedirectToAction("Index", "Home");
+            TempData["VoteMessage"] = "Thank you for voting!";
+            return RedirectToAction("Index", "Song");
         }
+
+        // Optional admin views
         public IActionResult JudgeVotes()
         {
             var songs = _context.Songs
@@ -93,7 +114,5 @@ namespace EUSong.Controllers
                 .ToList();
             return View("VotesList", songs);
         }
-
-
     }
 }
