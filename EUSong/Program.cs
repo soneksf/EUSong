@@ -11,48 +11,48 @@ using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1) Register the in-memory cache which Session uses under the hood
+// 1) Session & MVC
 builder.Services.AddDistributedMemoryCache();
-
-// 2) Add and configure Session
-builder.Services.AddSession(options =>
+builder.Services.AddSession(opts =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
+    opts.IdleTimeout = TimeSpan.FromMinutes(30);
+    opts.Cookie.HttpOnly = true;
+    opts.Cookie.IsEssential = true;
 });
 
-// 3) Add controllers with views
-builder.Services.AddControllersWithViews();
+// 2) Register both API controllers and Razor controllers
+builder.Services.AddControllers();            // <Ч for [ApiController]s
+builder.Services.AddControllersWithViews();   // <Ч for MVC views
 
-// 4) Register EF Core DbContext
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// 3) EF DbContext
+builder.Services.AddDbContext<AppDbContext>(opts =>
+    opts.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
+
+// 4) Seed SuperAdmin (as before)Е
 using (var scope = app.Services.CreateScope())
 {
     var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     if (!ctx.Users.Any(u => u.Role == "SuperAdmin"))
     {
-        // Ћог≥н ≥ пароль
-        const string superLogin = "superadmin@example.com";
-        const string superPassword = "Super@123";
+        const string login = "superadmin@example.com";
+        const string password = "Super@123";
 
-        // «генерувати с≥ль та хеш
         var salt = RandomNumberGenerator.GetBytes(16);
         var saltB64 = Convert.ToBase64String(salt);
         var hashB64 = Convert.ToBase64String(
-            KeyDerivation.Pbkdf2(password: superPassword,
-                salt: salt,
-                prf: KeyDerivationPrf.HMACSHA256,
-                iterationCount: 100_000,
-                numBytesRequested: 32));
+            KeyDerivation.Pbkdf2(
+              password: password,
+              salt: salt,
+              prf: KeyDerivationPrf.HMACSHA256,
+              iterationCount: 100_000,
+              numBytesRequested: 32));
 
         ctx.Users.Add(new User
         {
             Username = "SuperAdmin",
-            Email = superLogin,
+            Email = login,
             PasswordSalt = saltB64,
             PasswordHash = hashB64,
             Country = "",
@@ -63,8 +63,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -75,12 +73,13 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
-// 6) Enable Session before authorization and endpoints
 app.UseSession();
-
 app.UseAuthorization();
 
+// 5) Map API endpoints firstЕ
+app.MapControllers();
+
+// 6) Еand then MVC fallback
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

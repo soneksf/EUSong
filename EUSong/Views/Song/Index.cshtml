@@ -2,11 +2,9 @@
 @{
     ViewData["Title"] = "Browse Songs";
 
-    // authentication & card flags
+    // True if the user is authenticated (has a session UserId)
     var isAuth = (bool)(ViewBag.IsAuthenticated ?? false);
     var hasCard = (bool)(ViewBag.HasCard ?? false);
-
-    // get the current role from session
     var role = Context.Session.GetString("UserRole") ?? "";
 }
 
@@ -18,120 +16,144 @@
 
 <div class="container mt-4">
     <div class="browse-container">
-
-        <!-- Filter form -->
         <form method="get" asp-action="Index" class="row g-3 mb-4">
             <div class="col-md-4">
                 <input type="text" name="keyword" value="@ViewBag.Keyword"
-                       class="form-control"
-                       placeholder="Search by keyword" />
+                       class="form-control" placeholder="Search by keyword" />
             </div>
             <div class="col-md-3">
                 <input type="text" name="country" value="@ViewBag.Country"
-                       class="form-control"
-                       placeholder="Country" />
+                       class="form-control" placeholder="Country" />
             </div>
             <div class="col-md-3">
                 <input type="text" name="singer" value="@ViewBag.Singer"
-                       class="form-control"
-                       placeholder="Singer" />
+                       class="form-control" placeholder="Singer" />
             </div>
             <div class="col-md-1">
                 <input type="number" name="year" value="@ViewBag.Year"
-                       class="form-control"
-                       placeholder="Year" />
+                       class="form-control" placeholder="Year" />
             </div>
             <div class="col-md-1 d-grid">
                 <button type="submit" class="btn btn-primary btn-filter">Filter</button>
             </div>
         </form>
 
-        @* No songs found *@
-        @if (!Model.Any())
+        @if (!isAuth)
         {
-            <p class="text-center text-muted">No songs found.</p>
+            <div class="text-center my-5">
+                <button id="loadSongsBtn" class="btn btn-outline-primary">
+                    Load All Songs (via API)
+                </button>
+            </div>
+            <ul id="apiSongsList" class="list-group mb-4" style="display:none;"></ul>
         }
         else
         {
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Singer</th>
-                        <th>Country</th>
-                        <th>Year</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var song in Model)
-                    {
+            @if (!Model.Any())
+            {
+                <p class="text-center text-muted">No songs found.</p>
+            }
+            else
+            {
+                <table class="table table-striped">
+                    <thead>
                         <tr>
-                            <td>@song.Title</td>
-                            <td>@song.Singer</td>
-                            <td>@song.Country</td>
-                            <td>@song.Year</td>
-                            <td class="d-flex flex-wrap gap-2">
-                                @* Only 2025 votes *@
-                                @if (song.Year != 2025)
-                                {
-                                    <button class="btn btn-secondary btn-sm" disabled>
-                                        Voting only for 2025
-                                    </button>
-                                }
-                                else if (!isAuth)
-                                {
-                                    @* Not logged in *@
-                                    <a class="btn btn-outline-primary btn-sm"
-                                       asp-controller="Account" asp-action="Login">
-                                        Login to Vote
-                                    </a>
-                                }
-                                else if (role != "User")
-                                {
-                                    @* Admins/SuperAdmins get no voting UI *@
-                                    <button class="btn btn-secondary btn-sm" disabled>
-                                        Not eligible to vote
-                                    </button>
-                                }
-                                else if (!hasCard)
-                                {
-                                    @* Logged-in user without card *@
-                                    <a class="btn btn-outline-warning btn-sm"
-                                       asp-controller="CreditCard"
-                                       asp-action="Add"
-                                       asp-route-returnToVote="@song.Id">
-                                        Add Card to Vote
-                                    </a>
-                                }
-                                else
-                                {
-                                    @* Finally: real User with card *@
-                                    <a class="btn btn-warning btn-sm"
-                                       asp-controller="Vote"
-                                       asp-action="Create"
-                                       asp-route-songId="@song.Id">
-                                        Vote
-                                    </a>
-                                }
-
-                                <a class="btn btn-info btn-sm"
-                                   asp-controller="Comment"
-                                   asp-action="Index"
-                                   asp-route-songId="@song.Id">
-                                    View Comments
-                                </a>
-                                <a class="btn btn-success btn-sm"
-                                   asp-controller="Comment"
-                                   asp-action="Create"
-                                   asp-route-songId="@song.Id">
-                                    Comment
-                                </a>
-                            </td>
+                            <th>Title</th>
+                            <th>Singer</th>
+                            <th>Country</th>
+                            <th>Year</th>
+                            <th></th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var song in Model)
+                        {
+                            <tr>
+                                <td>@song.Title</td>
+                                <td>@song.Singer</td>
+                                <td>@song.Country</td>
+                                <td>@song.Year</td>
+                                <td class="d-flex flex-wrap gap-2">
+                                    @if (song.Year != DateTime.Now.Year)
+                                    {
+                                        <button class="btn btn-secondary btn-sm" disabled>
+                                            Voting only for @DateTime.Now.Year
+                                        </button>
+                                    }
+                                    else if (role != "User")
+                                    {
+                                        <button class="btn btn-secondary btn-sm" disabled>
+                                            Not eligible to vote
+                                        </button>
+                                    }
+                                    else if (!hasCard)
+                                    {
+                                        <a class="btn btn-outline-warning btn-sm"
+                                           asp-controller="CreditCard"
+                                           asp-action="Add"
+                                           asp-route-returnToVote="@song.Id">
+                                            Add Card to Vote
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a class="btn btn-warning btn-sm"
+                                           asp-controller="Vote"
+                                           asp-action="Create"
+                                           asp-route-songId="@song.Id">
+                                            Vote
+                                        </a>
+                                    }
+                                    <a class="btn btn-info btn-sm"
+                                       asp-controller="Comment"
+                                       asp-action="Index"
+                                       asp-route-songId="@song.Id">
+                                        Comments
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
         }
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const btn = document.getElementById("loadSongsBtn");
+            if (!btn) return;  
+
+            const list = document.getElementById("apiSongsList");
+            btn.addEventListener("click", async () => {
+                btn.disabled = true;
+                btn.textContent = "Loading…";
+
+                try {
+                    const resp = await fetch("/api/songs");
+                    if (!resp.ok) throw new Error(resp.statusText);
+                    const songs = await resp.json();
+
+                    // show the list container
+                    list.style.display = "block";
+                    list.innerHTML = ""; 
+
+                    songs.forEach(s => {
+                        const li = document.createElement("li");
+                        li.className = "list-group-item";
+                        li.textContent = `${s.title} — ${s.singer} (${s.country}, ${s.year})`;
+                        list.append(li);
+                    });
+
+                    btn.style.display = "none";  
+                } catch (err) {
+                    console.error("API load failed:", err);
+                    btn.textContent = "Failed to load. Retry?";
+                    btn.disabled = false;
+                }
+            });
+        });
+    </script>
+}
